@@ -671,6 +671,22 @@ tr.ps-filter-row th.frozen{z-index:8}
           </button>
         </div>
       </div>
+      <div class="settings-divider"></div>
+      <div class="settings-section">
+        <div class="settings-label">本機暫存（僅存於此瀏覽器，不會離開此電腦）</div>
+        <div class="settings-row">
+          <button class="settings-action-btn" id="modal-save-local-btn">
+            <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>本機暫存
+          </button>
+          <button class="settings-action-btn" id="modal-load-local-btn">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>讀取暫存
+          </button>
+          <button class="settings-action-btn danger" id="modal-reset-local-btn">
+            <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74"/><polyline points="3 3 3 9 9 9"/></svg>重置暫存
+          </button>
+        </div>
+        <div class="settings-hint" id="local-temp-status" style="font-size:11px;color:var(--text-3,#888);margin-top:6px"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -2282,35 +2298,56 @@ document.getElementById('file-input').addEventListener('change',e=>{
   reader.readAsArrayBuffer(file); e.target.value='';
 });
 
+/* ═══ SNAPSHOT BUILD / RESTORE (shared by HTML export + local temp) ═══ */
+function buildSnapshot(){
+  return {
+    pageTitle:document.getElementById('page-title').textContent.trim()||'PD Parts Tracking System',
+    boards:boards.map(b=>({name:b.name,materialDrive:b.materialDrive||'',dates:{...b.dates},...(b._edited&&b._edited.size?{_editedKeys:[...b._edited]}:{}),...(b._srcRow!=null?{_srcRow:b._srcRow}:{})})),
+    columns:columns.map(c=>({...c})), customColumns:customColumns.map(c=>({...c})),
+    parts:parts.map(p=>{
+      const o={}; ALL_KEYS.forEach(k=>{
+        if(STATUS_KEYS.includes(k)) o[k+'_status']=p[k+'_status']||'grey';
+        else if(!COMPUTED_KEYS.includes(k)) o[k]=p[k]||'';
+      });
+      if(p._koManual){ o._koManual=true; o.ko=p.ko||''; }
+      if(p._edited&&p._edited.size) o._editedKeys=[...p._edited];
+      // Carry through original-file columns this app doesn't model
+      // (e.g. Notes), plus the original source row, so they survive a
+      // save/reload and a later format-preserving Excel export.
+      if(p._extra && Object.keys(p._extra).length) o._extra={...p._extra};
+      if(p._srcRow!=null) o._srcRow=p._srcRow;
+      customColumns.forEach(c=>{
+        if(c.type==='status') o[c.key+'_status']=p[c.key+'_status']||'grey';
+        else o[c.key]=p[c.key]||'';
+      }); return o;
+    }),
+    // Original imported workbook (base64, with styles & formulas intact)
+    // and the column-mapping used to read it — needed so Excel export can
+    // keep patching the same template after the HTML file is reloaded.
+    ...(importTemplateB64 ? {importTemplateB64, importTemplate} : {})
+  };
+}
+function applySnapshot(snap){
+  if(!snap) return;
+  try{
+    if(snap.pageTitle) document.getElementById('page-title').textContent=snap.pageTitle;
+    if(Array.isArray(snap.boards)&&snap.boards.length)
+      boards=snap.boards.map(b=>({id:newId(),name:b.name||'Board',materialDrive:b.materialDrive||'',dates:{...Object.fromEntries(MS_STAGES.map(s=>[s,''])),...b.dates},_edited:new Set(Array.isArray(b._editedKeys)?b._editedKeys:[]),...(b._srcRow!=null?{_srcRow:b._srcRow}:{})}));
+    if(Array.isArray(snap.columns)&&snap.columns.length) columns=snap.columns.map(c=>({...c}));
+    if(Array.isArray(snap.customColumns)) customColumns=snap.customColumns.map(c=>({...c}));
+    if(Array.isArray(snap.parts)&&snap.parts.length) parts=snap.parts.map(p=>mkPart(p));
+    if(snap.importTemplateB64 && snap.importTemplate){ importTemplateB64=snap.importTemplateB64; importTemplate=snap.importTemplate; }
+  }catch(e){ console.error('snapshot restore failed',e); }
+}
+function applyBootstrapIfPresent(){
+  if(!window.__PD_BOOTSTRAP__) return;
+  applySnapshot(window.__PD_BOOTSTRAP__);
+}
+
 /* ═══ HTML SNAPSHOT EXPORT ═══ */
 document.getElementById('modal-export-html-btn').addEventListener('click',()=>{
   try{
-    const snapshot={
-      pageTitle:document.getElementById('page-title').textContent.trim()||'PD Parts Tracking System',
-      boards:boards.map(b=>({name:b.name,materialDrive:b.materialDrive||'',dates:{...b.dates},...(b._edited&&b._edited.size?{_editedKeys:[...b._edited]}:{}),...(b._srcRow!=null?{_srcRow:b._srcRow}:{})})),
-      columns:columns.map(c=>({...c})), customColumns:customColumns.map(c=>({...c})),
-      parts:parts.map(p=>{
-        const o={}; ALL_KEYS.forEach(k=>{
-          if(STATUS_KEYS.includes(k)) o[k+'_status']=p[k+'_status']||'grey';
-          else if(!COMPUTED_KEYS.includes(k)) o[k]=p[k]||'';
-        });
-        if(p._koManual){ o._koManual=true; o.ko=p.ko||''; }
-        if(p._edited&&p._edited.size) o._editedKeys=[...p._edited];
-        // Carry through original-file columns this app doesn't model
-        // (e.g. Notes), plus the original source row, so they survive a
-        // save/reload and a later format-preserving Excel export.
-        if(p._extra && Object.keys(p._extra).length) o._extra={...p._extra};
-        if(p._srcRow!=null) o._srcRow=p._srcRow;
-        customColumns.forEach(c=>{
-          if(c.type==='status') o[c.key+'_status']=p[c.key+'_status']||'grey';
-          else o[c.key]=p[c.key]||'';
-        }); return o;
-      }),
-      // Original imported workbook (base64, with styles & formulas intact)
-      // and the column-mapping used to read it — needed so Excel export can
-      // keep patching the same template after the HTML file is reloaded.
-      ...(importTemplateB64 ? {importTemplateB64, importTemplate} : {})
-    };
+    const snapshot=buildSnapshot();
     let html=document.documentElement.outerHTML.replace(/^window\.__PD_BOOTSTRAP__=[\s\S]*?;\n/gm,'');
     const anchor='/*PD_BOOTSTRAP_ANCHOR*/';
     const injection='window.__PD_BOOTSTRAP__='+JSON.stringify(snapshot)+';\n';
@@ -2323,25 +2360,76 @@ document.getElementById('modal-export-html-btn').addEventListener('click',()=>{
   }catch(err){ console.error(err); showToast('Export failed'); }
 });
 
-/* ═══ BOOTSTRAP RESTORE ═══ */
-function applyBootstrapIfPresent(){
-  if(!window.__PD_BOOTSTRAP__) return;
-  const snap=window.__PD_BOOTSTRAP__;
+/* ═══ LOCAL TEMP STORAGE (browser-only, manual save/load/reset) ═══
+   Nothing here runs automatically — data is only written to localStorage
+   when the user explicitly clicks "本機暫存". Refreshing or reopening the
+   file does NOT auto-restore from it; the user must click "讀取暫存". This
+   keeps behavior predictable and avoids silently persisting confidential
+   data unless the user asks for it. */
+const PD_LOCAL_KEY='pd_parts_tracking_local_temp_v1';
+function pdLocalTempStatusText(){
   try{
-    if(snap.pageTitle) document.getElementById('page-title').textContent=snap.pageTitle;
-    if(Array.isArray(snap.boards)&&snap.boards.length)
-      boards=snap.boards.map(b=>({id:newId(),name:b.name||'Board',materialDrive:b.materialDrive||'',dates:{...Object.fromEntries(MS_STAGES.map(s=>[s,''])),...b.dates},_edited:new Set(Array.isArray(b._editedKeys)?b._editedKeys:[]),...(b._srcRow!=null?{_srcRow:b._srcRow}:{})}));
-    if(Array.isArray(snap.columns)&&snap.columns.length) columns=snap.columns.map(c=>({...c}));
-    if(Array.isArray(snap.customColumns)) customColumns=snap.customColumns.map(c=>({...c}));
-    if(Array.isArray(snap.parts)&&snap.parts.length) parts=snap.parts.map(p=>mkPart(p));
-    if(snap.importTemplateB64 && snap.importTemplate){ importTemplateB64=snap.importTemplateB64; importTemplate=snap.importTemplate; }
-  }catch(e){ console.error('bootstrap restore failed',e); }
+    const raw=localStorage.getItem(PD_LOCAL_KEY);
+    if(!raw) return '目前沒有本機暫存資料。';
+    const snap=JSON.parse(raw);
+    return snap.savedAt?('上次本機暫存時間：'+new Date(snap.savedAt).toLocaleString()):'已有本機暫存資料。';
+  }catch(e){ return '目前沒有本機暫存資料。'; }
 }
+function refreshLocalTempStatus(){
+  const el=document.getElementById('local-temp-status');
+  if(el) el.textContent=pdLocalTempStatusText();
+}
+document.getElementById('modal-save-local-btn').addEventListener('click',()=>{
+  try{
+    const snapshot=buildSnapshot();
+    snapshot.savedAt=new Date().toISOString();
+    localStorage.setItem(PD_LOCAL_KEY,JSON.stringify(snapshot));
+    pdDirty=false;
+    refreshLocalTempStatus();
+    showToast('已存入本機暫存');
+  }catch(err){ console.error(err); showToast('本機暫存失敗'); }
+});
+document.getElementById('modal-load-local-btn').addEventListener('click',()=>{
+  const raw=localStorage.getItem(PD_LOCAL_KEY);
+  if(!raw){ showToast('尚未有本機暫存資料'); return; }
+  if(!confirm('讀取本機暫存將覆蓋目前畫面上尚未儲存的內容，確定要讀取嗎？')) return;
+  try{
+    const snap=JSON.parse(raw);
+    applySnapshot(snap);
+    renderMicroSchedule();
+    renderParts();
+    pdDirty=false;
+    settingsOverlay.classList.remove('show');
+    showToast('已讀取本機暫存（'+(snap.savedAt?new Date(snap.savedAt).toLocaleString():'')+'）');
+  }catch(err){ console.error(err); showToast('讀取失敗，暫存資料可能已損毀'); }
+});
+document.getElementById('modal-reset-local-btn').addEventListener('click',()=>{
+  if(!localStorage.getItem(PD_LOCAL_KEY)){ showToast('目前沒有本機暫存資料'); return; }
+  if(!confirm('確定要清除本機暫存資料嗎？此動作無法復原（目前畫面上的內容不受影響）。')) return;
+  localStorage.removeItem(PD_LOCAL_KEY);
+  refreshLocalTempStatus();
+  showToast('已清除本機暫存資料');
+});
+document.getElementById('settings-btn').addEventListener('click',refreshLocalTempStatus);
+
+/* ═══ CLOSE / REFRESH WARNING ═══
+   This app doesn't track fine-grained "dirty" state per edit, so instead of
+   trying to detect every possible change, we simply warn unconditionally
+   once the page has finished loading — better to over-warn than to
+   silently lose an in-progress edit. Saving to local temp or exporting
+   HTML clears the flag until the page is reloaded again. */
+let pdDirty=true;
+window.addEventListener('beforeunload',e=>{
+  if(!pdDirty) return;
+  e.preventDefault();
+  e.returnValue='';
+});
 
 /* ═══ INIT ═══ */
 applyBootstrapIfPresent();
 renderMicroSchedule();
 renderParts();
+refreshLocalTempStatus();
 if(typeof ResizeObserver!=='undefined')
   new ResizeObserver(()=>fixStickyTops()).observe(document.getElementById('ps-scroll'));
 </script>
