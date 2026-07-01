@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Overall Rankings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#14f1c4;--blue:#3a8bff;
+  --gold:#ffd166;--silver:#c8daff;--bronze:#ff9f5e;
+  --text-1:#f0f8ff;--text-2:#90b8e0;--text-3:#3d5878;
+  --r-sm:8px;--r-md:14px;--r-xl:28px;
+  --bar-h:80px;
+  --bg-body:#020a14;
+  --bg-card:rgba(58,139,255,.09);--bg-card2:rgba(20,241,196,.04);
+  --border-card:rgba(255,255,255,.09);
+  --fade-color:2,10,20;
+  --score-err:#ff5a5a;
+}
+[data-theme="light"]{
+  --text-1:#0a1e36;--text-2:#1d4068;--text-3:#6a96c0;
+  --bg-body:#eef6ff;
+  --bg-card:rgba(58,139,255,.06);--bg-card2:rgba(20,241,196,.03);
+  --border-card:rgba(58,139,255,.18);
+  --fade-color:238,246,255;
+}
+
+html{scroll-behavior:smooth}
+body{font-family:'Inter','Noto Sans TC',sans-serif;color:var(--text-1);min-height:100vh;overflow-x:hidden;background:var(--bg-body);transition:background .3s,color .3s}
+
+/* BG */
+.bg-canvas{position:fixed;inset:0;z-index:0}
+.bg-canvas{
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 0%,rgba(58,139,255,.30) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 50% at 90% 5%,rgba(20,241,196,.22) 0%,transparent 55%),
+    radial-gradient(ellipse 70% 40% at 50% 100%,rgba(124,106,255,.18) 0%,transparent 60%),
+    #020d1c;
+}
+[data-theme="light"] .bg-canvas{
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 0%,rgba(58,139,255,.18) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 50% at 90% 5%,rgba(20,241,196,.14) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 40% at 50% 100%,rgba(124,106,255,.1) 0%,transparent 60%),
+    #eef6ff;
+}
+.bg-canvas::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(circle 360px at 20% 35%,rgba(20,241,196,.12) 0%,transparent 70%),
+             radial-gradient(circle 320px at 80% 65%,rgba(58,139,255,.14) 0%,transparent 70%);
+  animation:blobdrift 18s ease-in-out infinite alternate}
+@keyframes blobdrift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(30px,18px) scale(1.05)}}
+
+/* CUSTOM BACKGROUND IMAGE */
+.bg-image-layer{
+  position:fixed;inset:0;z-index:0;
+  background-size:cover;background-position:center;background-repeat:no-repeat;
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
+.bg-image-layer.active{opacity:1}
+.bg-image-layer::after{
+  content:'';position:absolute;inset:0;
+  background:rgba(var(--fade-color),.55);
+}
+
+/* LAYOUT */
+.page{position:relative;z-index:1;max-width:1320px;margin:0 auto;padding:0 2rem;padding-bottom:calc(var(--bar-h) + 3.5rem)}
+
+/* HEADER */
+.site-header{
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  margin-bottom:1.5rem;padding:.65rem 0;
+  position:sticky;top:0;z-index:40;
+}
+.site-header::before{
+  content:'';
+  position:absolute;left:50%;top:0;
+  width:100vw;transform:translateX(-50%);
+  height:calc(100% + 40px); /* extend below for gradient tail */
+  pointer-events:none;z-index:-1;
+  opacity:0;transition:opacity .25s;
+  backdrop-filter:blur(22px);
+  -webkit-backdrop-filter:blur(22px);
+  -webkit-mask:linear-gradient(to bottom,black 60%,transparent);
+  mask:linear-gradient(to bottom,black 60%,transparent);
+  background:rgba(2,10,20,.18);
+}
+[data-theme="light"] .site-header::before{
+  background:rgba(220,238,255,.28);
+  box-shadow:none;
+}
+.site-header.scrolled::before{opacity:1}
+.title-block{display:flex;align-items:center;gap:12px;min-width:0}
+.title-wrap{display:inline-flex;align-items:center;gap:10px;max-width:100%}
+.title-wrap:hover .title-hint{opacity:1}
+.title-hint{flex-shrink:0;opacity:0;transition:opacity .2s;display:flex;cursor:pointer}
+.title-hint svg{color:var(--text-3)}
+#siteTitle{
+  font-size:clamp(1.15rem,3.2vw,1.75rem);font-weight:700;letter-spacing:.12em;
+  background:linear-gradient(130deg,#eef4ff 20%,var(--teal) 75%,var(--blue) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1.2;outline:none;cursor:text;white-space:nowrap;
+}
+[data-theme="light"] #siteTitle{background:linear-gradient(130deg,#1a6dcc 10%,#1179fe 55%,#3a8bff 100%);-webkit-background-clip:text;background-clip:text}
+#siteTitle:focus{-webkit-text-fill-color:var(--text-1);background:none;color:var(--text-1)}
+#siteTitle:empty:before{content:attr(data-placeholder);-webkit-text-fill-color:var(--text-3);background:none}
+.header-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+
+.icon-btn{
+  width:40px;height:40px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--text-2);transition:background .15s,color .15s;
+}
+[data-theme="light"] .icon-btn{border-color:rgba(10,60,120,.16);background:rgba(255,255,255,.7);color:var(--text-2);box-shadow:0 2px 8px rgba(58,139,255,.1)}
+.icon-btn:hover{background:rgba(255,255,255,.16);color:var(--text-1)}
+[data-theme="light"] .icon-btn:hover{background:rgba(255,255,255,.9);color:var(--text-1)}
+
+.settle-btn{
+  display:flex;align-items:center;gap:7px;flex-shrink:0;
+  padding:10px 22px;border:none;cursor:pointer;border-radius:50px;
+  font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.1em;color:#022019;
+  background:linear-gradient(135deg,var(--gold),var(--bronze));
+  box-shadow:0 4px 18px rgba(255,209,102,.3),0 2px 6px rgba(0,0,0,.25);
+  transition:transform .15s,box-shadow .15s;
+}
+.settle-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(255,209,102,.4)}
+.settle-btn:active{transform:scale(.97)}
+
+/* GLASS CARD */
+.glass-card{
+  background:linear-gradient(165deg,var(--bg-card),var(--bg-card2));
+  border:1px solid var(--border-card);border-radius:var(--r-xl);
+  backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);
+  box-shadow:0 12px 50px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.07);
+}
+[data-theme="light"] .glass-card{box-shadow:0 8px 40px rgba(58,139,255,.12),inset 0 1px 0 rgba(255,255,255,.8)}
+.rank-card{padding:0 0 .5rem;overflow:hidden}
+
+.jhrow-label{
+  font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--text-3);padding:9px 0;
+}
+.rch-rank{text-align:center}
+.rch-name{padding-left:1rem;padding-right:0}
+.rch-avg{text-align:center}
+
+/* JUDGE HEADER ROW */
+.judge-header-row{
+  display:grid;padding:0 1.4rem;align-items:center;
+  background:rgba(255,255,255,.04);
+  border-bottom:1px solid rgba(255,255,255,.09);
+  border-radius:var(--r-xl) var(--r-xl) 0 0;
+}
+[data-theme="light"] .judge-header-row{
+  background:rgba(58,139,255,.06);
+  border-bottom-color:rgba(58,139,255,.14);
+}
+.judge-header-cells{display:flex;flex-wrap:nowrap;overflow:hidden}
+.judge-header-item{
+  flex:1 1 0;min-width:44px;max-width:72px;padding:9px 5px;
+  font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text-3);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  border-right:1px solid rgba(255,255,255,.07);
+}
+[data-theme="light"] .judge-header-item{border-right-color:rgba(0,0,0,.06)}
+.judge-header-item:last-child{border-right:none}
+.jhrow-avg{
+  font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text-3);text-align:center;padding:9px 0;
+}
+
+/* ROWS */
+.rank-list{position:relative}
+.rank-row{
+  display:grid;align-items:center;padding:0 1.4rem;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+[data-theme="light"] .rank-row{border-bottom-color:rgba(58,139,255,.1)}
+.rank-row:last-child{border-bottom:none}
+
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes swapPulse{0%,100%{background:transparent}40%{background:rgba(20,241,196,.07)}}
+.row-anim-up{animation:slideUp .36s cubic-bezier(.34,1.56,.64,1) both}
+.row-anim-down{animation:slideDown .36s cubic-bezier(.34,1.56,.64,1) both}
+.row-anim-swap{animation:swapPulse .4s ease both}
+
+/* badge — larger for medals */
+.cell-rank{display:flex;align-items:center;justify-content:center;padding:.5rem .2rem}
+.rank-badge{
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:800;flex-shrink:0;line-height:1;
+}
+.rb-empty{background:rgba(255,255,255,.05);color:var(--text-3);font-size:17px}
+[data-theme="light"] .rb-empty{background:rgba(58,139,255,.07)}
+.rb-gold  {background:linear-gradient(135deg,rgba(255,209,102,.38),rgba(255,209,102,.1));color:var(--gold);box-shadow:0 0 16px rgba(255,209,102,.3)}
+.rb-silver{background:linear-gradient(135deg,rgba(200,218,255,.35),rgba(200,218,255,.1));color:var(--silver);box-shadow:0 0 12px rgba(200,218,255,.2)}
+.rb-bronze{background:linear-gradient(135deg,rgba(255,159,94,.38),rgba(255,159,94,.1));color:var(--bronze);box-shadow:0 0 12px rgba(255,159,94,.25)}
+.rb-other {background:rgba(255,255,255,.05);color:var(--text-2);font-size:15px}
+[data-theme="light"] .rb-other{background:rgba(58,139,255,.07)}
+.medal-icon{font-size:24px;line-height:1;display:block}
+
+/* name */
+.cell-name{
+  padding:.5rem .5rem .5rem 1rem;
+  font-size:17px;font-weight:700;color:var(--text-1);text-align:left;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+/* scores */
+.cell-scores{padding:.4rem 0;overflow:hidden}
+.score-group{display:flex;flex-wrap:nowrap;align-items:center;overflow-x:auto;scrollbar-width:none;padding:0 .5rem}
+.score-group::-webkit-scrollbar{display:none}
+.score-item{
+  display:flex;align-items:center;justify-content:center;
+  flex:1 1 0;min-width:44px;max-width:72px;padding:4px 5px;
+  border-right:1px solid rgba(255,255,255,.07);
+}
+[data-theme="light"] .score-item{border-right-color:rgba(0,0,0,.07)}
+.score-item:last-child{border-right:none}
+.score-item.trimmed .score-val{
+  color:var(--text-3);text-decoration:line-through;
+  text-decoration-color:rgba(255,159,94,.7);
+}
+[data-theme="light"] .score-item.trimmed .score-val{color:#8aaccc;text-decoration-color:rgba(255,100,50,.6)}
+.score-val{font-size:17px;font-weight:600;color:var(--text-1);white-space:nowrap;display:block;text-align:center;width:100%}
+.score-val.empty{color:var(--text-3)}
+
+/* avg */
+.cell-avg{padding:.5rem 1rem;text-align:center;white-space:nowrap}
+.avg-num{font-size:21px;font-weight:700;background:linear-gradient(135deg,var(--teal),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+[data-theme="light"] .avg-num{background:linear-gradient(135deg,#1179fe,#3a8bff);-webkit-background-clip:text;background-clip:text}
+.avg-num.zero{font-size:19px;font-weight:600;-webkit-text-fill-color:var(--text-3);background:none}
+.avg-denom{font-size:11px;color:var(--text-3)}
+.rank-empty{text-align:center;padding:4rem 2rem;color:var(--text-3);font-size:15px}
+
+/* ── SETTINGS MODAL ── */
+.settings-overlay{
+  position:fixed;inset:0;z-index:200;
+  display:flex;align-items:center;justify-content:center;padding:1.5rem;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  opacity:0;pointer-events:none;transition:opacity .22s;
+}
+.settings-overlay.open{opacity:1;pointer-events:auto}
+.settings-card{
+  background:linear-gradient(160deg,rgba(5,14,34,.97),rgba(2,9,22,.98));
+  border:1px solid rgba(255,255,255,.13);border-radius:var(--r-xl);
+  padding:1.8rem;width:100%;max-width:520px;max-height:88vh;
+  box-shadow:0 24px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.07);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.settings-body{
+  flex:1;overflow-y:auto;min-height:0;
+  scrollbar-width:none;
+}
+.settings-body::-webkit-scrollbar{display:none}
+[data-theme="light"] .settings-card{
+  background:linear-gradient(160deg,rgba(255,255,255,.98),rgba(232,244,255,.99));
+  border-color:rgba(58,139,255,.22);
+  box-shadow:0 20px 80px rgba(58,139,255,.18),inset 0 1px 0 rgba(255,255,255,1);
+}
+.settings-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-shrink:0}
+.settings-title{font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-3)}
+.settings-close{
+  background:rgba(255,255,255,.07);border:none;border-radius:50%;
+  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  color:var(--text-2);cursor:pointer;transition:background .15s;
+}
+[data-theme="light"] .settings-close{background:rgba(58,139,255,.1);color:var(--text-2)}
+.settings-close:hover{background:rgba(255,255,255,.18);color:var(--text-1)}
+[data-theme="light"] .settings-close:hover{background:rgba(58,139,255,.2);color:var(--text-1)}
+
+.settings-section{margin-bottom:1.5rem}
+.settings-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+.settings-section-label{font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--text-3)}
+
+.inline-stepper{display:flex;align-items:center;gap:8px}
+.inline-stepper button{
+  width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);color:var(--text-1);font-size:15px;line-height:1;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:background .15s;
+}
+[data-theme="light"] .inline-stepper button{border-color:rgba(58,139,255,.25);background:rgba(58,139,255,.08);color:var(--text-1)}
+.inline-stepper button:hover{background:rgba(255,255,255,.18)}
+[data-theme="light"] .inline-stepper button:hover{background:rgba(58,139,255,.18)}
+.inline-stepper span{font-size:14px;font-weight:700;min-width:20px;text-align:center;color:var(--text-1)}
+
+
+/* name grid 2-col */
+.name-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:5px;
+  max-height:240px;overflow-y:auto;scrollbar-width:none;
+}
+.name-grid::-webkit-scrollbar{display:none}
+.name-grid.collapsed .name-row:nth-child(n+4),.judge-name-grid.collapsed .name-row:nth-child(n+4){display:none}
+.list-expand-btn{
+  display:flex;flex-direction:column;align-items:center;gap:1px;
+  width:100%;margin-top:8px;padding:4px;border:none;background:none;
+  color:var(--text-3);font-size:11px;font-family:inherit;cursor:pointer;
+  transition:color .15s;
+}
+.list-expand-btn:hover{color:var(--text-2)}
+.list-expand-btn svg{transition:transform .2s}
+.list-expand-btn.open svg{transform:rotate(180deg)}
+.name-row{display:flex;align-items:center;gap:5px}
+.name-idx{font-size:11px;color:var(--text-3);min-width:16px;text-align:right;font-weight:700}
+.name-input{
+  flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:var(--r-sm);
+  padding:6px 9px;color:var(--text-1);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;min-width:0;
+}
+[data-theme="light"] .name-input{background:rgba(255,255,255,.8);border-color:rgba(58,139,255,.22);color:var(--text-1)}
+.name-input:focus{border-color:var(--teal)}
+[data-theme="light"] .name-input:focus{border-color:#1179fe}
+.name-input::placeholder{color:var(--text-3)}
+
+/* judge name list — 2-col, same as athlete grid */
+.judge-name-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:5px;
+}
+
+/* background image upload */
+.bgimg-row{display:flex;align-items:center;gap:10px}
+.bgimg-preview{
+  width:64px;height:64px;border-radius:var(--r-md);flex-shrink:0;
+  background-color:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  background-size:cover;background-position:center;background-repeat:no-repeat;
+  display:flex;align-items:center;justify-content:center;color:var(--text-3);
+}
+[data-theme="light"] .bgimg-preview{background-color:rgba(58,139,255,.06);border-color:rgba(58,139,255,.2)}
+.bgimg-actions{display:flex;flex-direction:column;gap:6px;flex:1}
+.bgimg-btn{
+  padding:8px 12px;border-radius:var(--r-sm);border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.05);color:var(--text-2);font-size:12px;font-weight:700;
+  font-family:inherit;letter-spacing:.04em;cursor:pointer;transition:background .15s,color .15s;
+  text-align:center;display:block;
+}
+[data-theme="light"] .bgimg-btn{border-color:rgba(58,139,255,.22);background:rgba(58,139,255,.06);color:var(--text-2)}
+.bgimg-btn:hover{background:rgba(255,255,255,.12);color:var(--text-1)}
+[data-theme="light"] .bgimg-btn:hover{background:rgba(58,139,255,.15);color:var(--text-1)}
+.bgimg-btn.danger{color:var(--score-err);border-color:rgba(255,90,90,.3)}
+.bgimg-btn.danger:hover{background:rgba(255,90,90,.12)}
+
+/* judge toggle switch */
+.toggle-switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-size:12px;font-weight:600;color:var(--text-2)}
+.toggle-track{
+  width:36px;height:20px;border-radius:10px;
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.18);
+  position:relative;transition:background .2s,border-color .2s;flex-shrink:0;
+}
+[data-theme="light"] .toggle-track{background:rgba(58,139,255,.15);border-color:rgba(58,139,255,.25)}
+.toggle-track.on{background:var(--teal);border-color:var(--teal)}
+[data-theme="light"] .toggle-track.on{background:#1179fe;border-color:#1179fe}
+.toggle-knob{
+  position:absolute;top:2px;left:2px;
+  width:14px;height:14px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1);
+}
+.toggle-track.on .toggle-knob{transform:translateX(16px)}
+
+.settings-footer{display:flex;gap:10px;margin-top:.75rem;flex-shrink:0}
+.settings-save{
+  flex:1;padding:11px;border:none;border-radius:var(--r-md);
+  background:linear-gradient(135deg,var(--teal),var(--blue));
+  color:#021a12;font-size:14px;font-weight:800;font-family:inherit;letter-spacing:.06em;
+  cursor:pointer;transition:opacity .15s,transform .1s;
+}
+.settings-save:hover{opacity:.88}
+.settings-save:active{transform:scale(.98)}
+.settings-export{
+  flex:1;padding:9px;border:1px solid rgba(255,255,255,.14);border-radius:var(--r-md);
+  background:rgba(255,255,255,.05);color:var(--text-2);
+  font-size:13px;font-weight:700;font-family:inherit;letter-spacing:.06em;
+  cursor:pointer;transition:background .15s,color .15s;
+}
+[data-theme="light"] .settings-export{border-color:rgba(58,139,255,.25);background:rgba(58,139,255,.07);color:var(--text-2)}
+.settings-export:hover{background:rgba(255,255,255,.12);color:var(--text-1)}
+[data-theme="light"] .settings-export:hover{background:rgba(58,139,255,.15);color:var(--text-1)}
+
+/* BOTTOM BAR */
+.bottom-bar{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;height:var(--bar-h);
+  overflow:hidden;
+  background:
+    linear-gradient(135deg,rgba(20,100,255,.22) 0%,rgba(20,241,196,.10) 60%,rgba(58,139,255,.18) 100%);
+  backdrop-filter:blur(20px) saturate(180%) brightness(1.18);
+  -webkit-backdrop-filter:blur(20px) saturate(180%) brightness(1.18);
+  border-top:1px solid rgba(58,139,255,.30);
+  box-shadow:
+    0 -4px 32px rgba(58,139,255,.28),
+    0 -1px 0 rgba(20,241,196,.18),
+    inset 0 1px 0 rgba(100,180,255,.20);
+}
+[data-theme="light"] .bottom-bar{
+  background:
+    linear-gradient(135deg,rgba(100,170,255,.45) 0%,rgba(130,190,255,.40) 50%,rgba(80,155,255,.42) 100%);
+  backdrop-filter:blur(20px) saturate(180%) brightness(1.06);
+  -webkit-backdrop-filter:blur(20px) saturate(180%) brightness(1.06);
+  border-top:1px solid rgba(60,130,255,.40);
+  box-shadow:
+    0 -4px 28px rgba(58,139,255,.28),
+    0 -1px 0 rgba(80,150,255,.30),
+    inset 0 1px 0 rgba(255,255,255,.60);
+}
+
+.bar-label{flex-shrink:0;min-width:48px;margin-right:12px}
+.bar-label-text{font-size:17px;font-weight:700;color:#fff}
+[data-theme="light"] .bar-label-text{color:#0a1e36}
+.bar-circles{display:flex;gap:7px;overflow-x:auto;flex:0 1 auto;padding:5px 2px 2px;scrollbar-width:none}
+.bar-circles::-webkit-scrollbar{display:none}
+.circle{
+  width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;flex-shrink:0;
+  background:rgba(255,255,255,.07);color:var(--text-2);border:1px solid rgba(255,255,255,.1);
+  transition:transform .12s,background .15s,color .15s,border-color .15s;
+}
+[data-theme="light"] .circle{background:rgba(255,255,255,.7);border-color:rgba(58,139,255,.2);color:var(--text-2);box-shadow:0 2px 6px rgba(58,139,255,.08)}
+.circle.athlete{cursor:pointer}
+.circle.athlete:hover{background:rgba(20,241,196,.18);color:var(--teal);border-color:rgba(20,241,196,.45);transform:translateY(-3px)}
+.circle.scored{background:rgba(20,241,196,.18);color:var(--teal);border-color:rgba(20,241,196,.45)}
+[data-theme="light"] .circle.athlete:hover{background:rgba(17,121,254,.15);color:#1179fe;border-color:rgba(17,121,254,.5)}
+[data-theme="light"] .circle.scored{background:rgba(17,121,254,.15);color:#1179fe;border-color:rgba(17,121,254,.6)}
+
+/* ATHLETE PANEL */
+.athlete-panel{width:100%;position:relative;z-index:2;height:100%;}
+.ap-page-wrap{position:absolute;top:0;height:100%;display:flex;align-items:center;}
+.ap-row{width:100%;box-sizing:border-box;align-items:center;}
+.ap-back{
+  background:rgba(255,255,255,.07);border:none;border-radius:50%;
+  width:38px;height:38px;display:flex;align-items:center;justify-content:center;
+  color:var(--text-2);cursor:pointer;transition:background .15s,color .15s;margin:auto;
+}
+[data-theme="light"] .ap-back{background:rgba(58,139,255,.1)}
+.ap-back:hover{background:rgba(255,255,255,.18);color:var(--text-1)}
+.ap-scores{overflow-x:auto!important;scrollbar-width:none;overflow-y:hidden;}
+.ap-scores::-webkit-scrollbar{display:none}
+.ap-submit-wrap{display:flex;align-items:center;justify-content:center;}
+
+/* SCORE INPUTS + VALIDATION */
+.score-input-row{
+  display:flex;flex-wrap:nowrap;align-items:center;
+  overflow-x:auto;scrollbar-width:none;
+  padding:0 .5rem;width:100%;
+}
+.score-input-row::-webkit-scrollbar{display:none}
+.score-field{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  flex:1 1 0;min-width:44px;max-width:72px;
+  padding:4px 5px;
+  border-right:1px solid rgba(255,255,255,.07);
+  position:relative;
+}
+[data-theme="light"] .score-field{border-right-color:rgba(0,0,0,.07)}
+.score-field:last-child{border-right:none}
+.score-field-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;width:100%}
+.score-field-input{
+  background:transparent;border:none;border-bottom:2px solid rgba(255,255,255,.15);border-radius:0;
+  padding:3px 4px;color:var(--text-1);font-size:17px;font-weight:600;
+  outline:none;font-family:inherit;text-align:center;transition:border-color .15s;width:100%;
+  -moz-appearance:textfield;
+}
+[data-theme="light"] .score-field-input{border-bottom-color:rgba(58,139,255,.2);color:var(--text-1)}
+.score-field-input::-webkit-inner-spin-button,.score-field-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.score-field-input:focus{border-bottom-color:var(--teal);color:var(--teal)}
+[data-theme="light"] .score-field-input:focus{border-bottom-color:#1179fe;color:#1179fe}
+.score-field-input::placeholder{color:var(--text-3)}
+/* error state */
+.score-field.err .score-field-input{border-bottom-color:var(--score-err)!important;color:var(--score-err)!important}
+.score-field.err .score-field-label{color:var(--score-err)}
+.score-field-err{font-size:9px;color:var(--score-err);white-space:nowrap;height:11px;line-height:11px;overflow:hidden}
+
+.submit-btn{
+  border:none;border-radius:var(--r-md);padding:9px 18px;
+  color:#021a12;font-size:13px;font-weight:800;letter-spacing:.06em;white-space:nowrap;
+  cursor:pointer;font-family:inherit;
+  background:linear-gradient(135deg,var(--teal),var(--blue));
+  box-shadow:0 4px 22px rgba(20,241,196,.28);transition:opacity .15s,transform .1s;
+}
+.submit-btn:hover{opacity:.88}
+.submit-btn:active{transform:scale(.98)}
+.submit-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* PODIUM */
+.podium-overlay{
+  position:fixed;inset:0;z-index:80;background:rgba(1,8,20,.55);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .25s;padding:2rem;
+}
+.podium-overlay.open{opacity:1;pointer-events:auto}
+.podium-card{
+  background:linear-gradient(160deg,rgba(20,241,196,.11),rgba(58,139,255,.09),rgba(124,106,255,.07));
+  border:1px solid rgba(255,255,255,.2);border-radius:var(--r-xl);
+  padding:2.4rem 2rem 2rem;max-width:560px;width:100%;text-align:center;
+  box-shadow:0 20px 80px rgba(20,241,196,.1),inset 0 1px 0 rgba(255,255,255,.15);
+  backdrop-filter:blur(40px) saturate(200%);-webkit-backdrop-filter:blur(40px) saturate(200%);
+}
+.podium-title{
+  font-size:clamp(1rem,3vw,1.5rem);font-weight:700;letter-spacing:.12em;
+  background:linear-gradient(130deg,#eef4ff 20%,var(--teal) 75%,var(--blue) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:2rem;
+}
+[data-theme="light"] .podium-title{background:linear-gradient(130deg,#1a6dcc 10%,#1179fe 55%,#3a8bff 100%);-webkit-background-clip:text;background-clip:text}
+.podium-row{display:flex;align-items:flex-end;justify-content:center;gap:12px;margin-bottom:1.8rem}
+.podium-col{display:flex;flex-direction:column;align-items:center;gap:.7rem;flex:1;min-width:0}
+.podium-names{font-size:14px;font-weight:700;color:#fff;min-height:42px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px;text-align:center;line-height:1.35;word-break:break-word;padding:0 4px}
+.podium-col.empty .podium-names{color:var(--text-3)}
+.podium-bar{width:100%;border-radius:var(--r-md) var(--r-md) 0 0;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800}
+.podium-col.first  .podium-bar{height:128px;background:linear-gradient(180deg,rgba(255,209,102,.28),rgba(255,209,102,.06));color:var(--gold);box-shadow:0 0 32px rgba(255,209,102,.25),inset 0 1px 0 rgba(255,209,102,.45);border:1px solid rgba(255,209,102,.30)}
+.podium-col.second .podium-bar{height:96px;background:linear-gradient(180deg,rgba(160,200,255,.38),rgba(100,160,255,.12));color:#a8d4ff;box-shadow:0 0 28px rgba(100,160,255,.35),inset 0 1px 0 rgba(200,230,255,.55);border:1px solid rgba(140,190,255,.40)}
+.podium-col.third  .podium-bar{height:70px;background:linear-gradient(180deg,rgba(255,159,94,.24),rgba(255,159,94,.05));color:var(--bronze);box-shadow:0 0 22px rgba(255,159,94,.20),inset 0 1px 0 rgba(255,159,94,.38);border:1px solid rgba(255,159,94,.25)}
+[data-theme="light"] .podium-overlay{background:rgba(200,225,255,.35)}
+[data-theme="light"] .podium-card{
+  background:linear-gradient(160deg,rgba(255,255,255,.97),rgba(230,244,255,.98));
+  border-color:rgba(58,139,255,.2);
+  box-shadow:0 20px 80px rgba(58,139,255,.15),inset 0 1px 0 rgba(255,255,255,1);
+}
+[data-theme="light"] .podium-names{color:var(--text-1)}
+
+@media(max-width:640px){
+  :root{--bar-h:72px}
+  .site-header{
+    position:fixed;top:0;left:0;right:0;z-index:40;
+    margin-bottom:0;padding:.6rem 1rem;
+  }
+  .page{
+    padding:0;
+    padding-top:calc(56px + .5rem);
+    padding-bottom:calc(var(--bar-h) + .5rem);
+    display:flex;flex-direction:column;height:100dvh;
+  }
+  .glass-card.rank-card{
+    flex:1;overflow-y:auto;border-radius:0;border:none;
+    margin:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;
+    background:transparent;
+  }
+  .judge-header-row{background:transparent;border-bottom:none}
+  .rch-scores,.cell-scores:not(.ap-scores),.judge-header-cells{display:none!important}
+  .settle-btn{padding:8px 14px;font-size:11px}
+  .bottom-bar{padding:.5rem 1rem}
+  .bar-label{min-width:40px}
+  .score-field{flex:0 0 56px}
+  .settings-overlay{padding:.75rem}
+  .settings-card{padding:1.4rem;width:100%;max-width:100%;overflow-x:hidden}
+  .name-grid,.judge-name-grid{grid-template-columns:1fr}
+  .ap-row{display:flex;align-items:center;gap:10px;grid-template-columns:unset}
+  .ap-name{padding-left:0;min-width:60px;max-width:110px;flex-shrink:0}
+  .ap-scores{flex:1}
+  .ap-submit-wrap{flex-shrink:0;padding:.5rem .8rem}
+  .rank-row,.judge-header-row{grid-template-columns:42px 1fr auto!important}
+  .cell-avg{padding:.5rem .8rem .5rem .4rem;text-align:right}
+  .cell-name{font-size:14px}
+}
+@media(max-width:400px){
+  .header-actions{gap:6px}
+  .icon-btn{width:34px;height:34px}
+  .settle-btn{padding:7px 12px;font-size:10px}
+}
+</style>
+</head>
+<body>
+<div class="bg-canvas"></div>
+<div class="bg-image-layer" id="bgImageLayer"></div>
+<div class="page">
+  <header class="site-header">
+    <div class="title-block">
+      <div class="title-wrap">
+        <h1 id="siteTitle" contenteditable="true" spellcheck="false" data-placeholder="Overall Rankings">Overall Rankings</h1>
+        <span class="title-hint" onclick="focusTitle()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="openSettings()" aria-label="設定">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <button class="settle-btn" onclick="openPodium()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3 4"/><path d="M17 6h3a3 3 0 0 1-3 4"/></svg>
+        結算
+      </button>
+    </div>
+  </header>
+
+  <div class="glass-card rank-card">
+    <div id="judgeHeaderRow"></div>
+    <div class="rank-list" id="rankList"></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="settings-overlay" id="settingsOverlay" onclick="onSettingsOverlayClick(event)">
+  <div class="settings-card">
+    <div class="settings-header">
+      <span class="settings-title">設定</span>
+      <button class="settings-close" onclick="closeSettings()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="settings-body">
+    <div class="settings-section">
+      <div class="settings-section-header">
+        <span class="settings-section-label">外觀模式</span>
+        <label class="toggle-switch" onclick="setTheme(currentTheme==='dark'?'light':'dark')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-3)"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <div class="toggle-track" id="themeToggleTrack"><div class="toggle-knob"></div></div>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-3)"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </label>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-header">
+        <span class="settings-section-label">選手名單</span>
+        <div class="inline-stepper">
+          <button onclick="settingsAdjustAthletes(-1)">−</button>
+          <span id="settingsAthleteCount">10</span>
+          <button onclick="settingsAdjustAthletes(1)">＋</button>
+        </div>
+      </div>
+      <div class="name-grid" id="settingsNameList"></div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-header">
+        <span class="settings-section-label">評審人員</span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <label class="toggle-switch" id="judgeHeaderToggle" onclick="toggleJudgeHeader()">
+            <div class="toggle-track on"><div class="toggle-knob"></div></div>
+            <span id="judgeToggleLabel">顯示</span>
+          </label>
+          <div class="inline-stepper">
+            <button onclick="settingsAdjustJudges(-1)">−</button>
+            <span id="settingsJudgeCount">10</span>
+            <button onclick="settingsAdjustJudges(1)">＋</button>
+          </div>
+        </div>
+      </div>
+      <div class="judge-name-grid" id="settingsJudgeList"></div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-header">
+        <span class="settings-section-label">背景圖片</span>
+      </div>
+      <div class="bgimg-row">
+        <div class="bgimg-preview" id="bgImgPreview">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        </div>
+        <div class="bgimg-actions">
+          <label class="bgimg-btn" for="bgImgInput">上傳圖片</label>
+          <input type="file" id="bgImgInput" accept="image/*" style="display:none" onchange="onBgImageUpload(event)"/>
+          <button class="bgimg-btn danger" id="bgImgRemoveBtn" onclick="removeBgImage()" style="display:none">移除背景圖片</button>
+        </div>
+      </div>
+    </div>
+    </div><!-- end settings-body -->
+
+    <div class="settings-footer">
+      <button class="settings-export" onclick="exportHTML()">匯出 HTML</button>
+      <button class="settings-save" onclick="saveSettings()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- PODIUM -->
+<div class="podium-overlay" id="podiumOverlay" onclick="closePodium(event)">
+  <div class="podium-card">
+    <p class="podium-title" id="podiumTitle"></p>
+    <div class="podium-row" id="podiumRow"></div>
+  </div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <div id="rosterView" style="position:absolute;inset:0;display:flex;align-items:center;padding:.6rem 2rem;">
+    <div class="bar-label"><span class="bar-label-text">評分區</span></div>
+    <div class="bar-circles" id="athleteCircles"></div>
+  </div>
+  <div id="athletePanel" class="athlete-panel" style="display:none;position:absolute;inset:0;">
+    <div class="ap-page-wrap">
+      <div class="ap-row">
+        <div class="cell-rank">
+          <button class="ap-back" onclick="closeAthletePanel()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+        </div>
+        <div class="cell-name ap-name" id="apNameLabel"></div>
+        <div class="cell-scores ap-scores">
+          <div class="score-input-row" id="apScoreGrid"></div>
+        </div>
+        <div class="cell-avg ap-submit-wrap">
+          <button class="submit-btn" id="apSubmitBtn" onclick="submitAthletePanel()">提交</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function fmt(v,d){const s=v.toFixed(d);return s.includes('.')?s.replace(/\.?0+$/,''):s}
+let judges = Array.from({length:10},(_,i)=>'評審'+(i+1));
+let athletes = Array.from({length:10},(_,i)=>({id:i+1,name:'EPM '+(i+1),scores:Array(10).fill(null)}));
+let nextId = 11;
+let activeAthleteId = null;
+let currentTheme = 'dark';
+let showJudgeHeader = true;
+let prevOrder = [];
+let tmpAthleteCount = 10;
+let tmpJudgeCount = 10;
+let tmpShowJudgeHeader = true;
+let tmpJudgeNames = [...judges];
+let bgImage = null;
+
+// ── SCORING ──
+function avg(s){
+  const v=s.filter(x=>x!==null);
+  if(!v.length) return null;
+  if(v.length<=2) return v.reduce((a,b)=>a+b,0)/v.length;
+  const sorted=[...v].sort((a,b)=>a-b);
+  return sorted.slice(1,-1).reduce((a,b)=>a+b,0)/(sorted.length-2);
+}
+function trimmedIndices(s){
+  const v=s.map((x,i)=>({x,i})).filter(o=>o.x!==null);
+  if(v.length<=2) return new Set();
+  let mn=v[0],mx=v[0];
+  v.forEach(o=>{if(o.x<mn.x)mn=o;if(o.x>mx.x)mx=o;});
+  return new Set(mn.i===mx.i?[mn.i]:[mn.i,mx.i]);
+}
+function getRanked(){
+  const sorted=[...athletes].sort((a,b)=>{
+    const aa=avg(a.scores),ba=avg(b.scores);
+    if(aa===null&&ba===null) return a.id-b.id;
+    if(aa===null) return 1; if(ba===null) return -1;
+    return ba-aa;
+  });
+  const ranks=[];
+  sorted.forEach((a,i)=>{
+    const av=avg(a.scores);
+    if(av!==null&&i>0){
+      const pav=avg(sorted[i-1].scores);
+      if(pav!==null&&Math.abs(av-pav)<0.005){ranks.push(ranks[i-1]);return;}
+    }
+    ranks.push(i+1);
+  });
+  return sorted.map((a,i)=>({athlete:a,rank:ranks[i],avg:avg(a.scores)}));
+}
+
+// ── TITLE ──
+function focusTitle(){
+  const t=document.getElementById('siteTitle');t.focus();
+  const r=document.createRange();r.selectNodeContents(t);r.collapse(false);
+  const s=window.getSelection();s.removeAllRanges();s.addRange(r);
+}
+document.getElementById('siteTitle').addEventListener('keydown',e=>{if(e.key==='Enter')e.preventDefault()});
+document.getElementById('siteTitle').addEventListener('paste',e=>{
+  e.preventDefault();
+  document.execCommand('insertText',false,(e.clipboardData||window.clipboardData).getData('text').replace(/\n/g,' '));
+});
+
+// ── BADGE ──
+function badgeCls(rank,hasScore){
+  if(!hasScore) return 'rb-empty';
+  return rank===1?'rb-gold':rank===2?'rb-silver':rank===3?'rb-bronze':'rb-other';
+}
+function badgeContent(rank,hasScore){
+  if(!hasScore) return '<span style="font-size:16px">—</span>';
+  const medalMap={1:'<span class="medal-icon">🥇</span>',2:'<span class="medal-icon">🥈</span>',3:'<span class="medal-icon">🥉</span>'};
+  return medalMap[rank]||`<span style="font-size:15px;font-weight:800">${rank}</span>`;
+}
+
+function gridCols(){return '42px 1fr 6fr 88px'}
+
+// ── COMBINED HEADER ROW (col labels + judge names in one row) ──
+function renderJudgeHeader(){
+  const container=document.getElementById('judgeHeaderRow');
+  const cols=gridCols();
+  container.className='judge-header-row';
+  container.style.gridTemplateColumns=cols;
+  if(showJudgeHeader){
+    const cells=judges.map(j=>`<div class="judge-header-item">${j}</div>`).join('');
+    container.innerHTML=`
+      <div class="jhrow-label rch-rank">排名</div>
+      <div class="jhrow-label rch-name">選手</div>
+      <div class="judge-header-cells" style="overflow:hidden;padding:0 .5rem">${cells}</div>
+      <div class="jhrow-label jhrow-avg rch-avg">平均</div>`;
+  } else {
+    container.innerHTML=`
+      <div class="jhrow-label rch-rank">排名</div>
+      <div class="jhrow-label rch-name">選手</div>
+      <div></div>
+      <div class="jhrow-label jhrow-avg rch-avg">平均</div>`;
+  }
+}
+
+// ── RENDER RANKING ──
+function buildRow(a,rank,av,animCls,delay){
+  const hasScore=av!==null;
+  const bc=badgeCls(rank,hasScore);
+  const bc2=badgeContent(rank,hasScore);
+  const trimmed=trimmedIndices(a.scores);
+  const scoreItems=a.scores.map((sc,j)=>`
+    <div class="score-item${trimmed.has(j)?' trimmed':''}">
+      <span class="score-val${sc===null?' empty':''}">${sc!==null?fmt(sc,1):'—'}</span>
+    </div>`).join('');
+  const avgHtml=hasScore
+    ?`<span class="avg-num">${fmt(av,2)}</span><span class="avg-denom">/10</span>`
+    :`<span class="avg-num zero">—</span>`;
+  return `<div class="rank-row${animCls}" style="grid-template-columns:${gridCols()};animation-delay:${delay}ms">
+    <div class="cell-rank"><div class="rank-badge ${bc}">${bc2}</div></div>
+    <div class="cell-name">${a.name}</div>
+    <div class="cell-scores"><div class="score-group">${scoreItems}</div></div>
+    <div class="cell-avg">${avgHtml}</div>
+  </div>`;
+}
+
+function renderRanking(animate){
+  const ranked=getRanked();
+  const list=document.getElementById('rankList');
+  if(!ranked.length){list.innerHTML='<div class="rank-empty">尚未新增選手</div>';return;}
+  const newOrder=ranked.map(r=>r.athlete.id);
+  if(animate&&prevOrder.length===newOrder.length){
+    const movedIds=new Set(newOrder.filter((id,i)=>prevOrder[i]!==id));
+    list.innerHTML=ranked.map(({athlete:a,rank:r,avg:av},i)=>{
+      const prevIdx=prevOrder.indexOf(a.id);
+      const animCls=movedIds.has(a.id)?(i<prevIdx?' row-anim-up':i>prevIdx?' row-anim-down':' row-anim-swap'):'';
+      return buildRow(a,r,av,animCls,i*25);
+    }).join('');
+  } else {
+    list.innerHTML=ranked.map(({athlete:a,rank:r,avg:av})=>buildRow(a,r,av,'',0)).join('');
+  }
+  prevOrder=newOrder;
+}
+
+// ── RENDER BAR ──
+function renderBar(){
+  document.getElementById('athleteCircles').innerHTML=
+    athletes.map((a,i)=>{
+      const scored=a.scores.some(x=>x!==null);
+      return `<div class="circle athlete${scored?' scored':''}" onclick="openAthletePanel(${a.id})">${i+1}</div>`;
+    }).join('');
+}
+
+// ── ALIGN PANEL TO TABLE ──
+function alignAthletePanel(){
+  const apRow = document.querySelector('.ap-row');
+  const apWrap = document.querySelector('.ap-page-wrap');
+  if(!apRow || !apWrap) return;
+
+  const isMobile = window.innerWidth <= 640;
+  if(isMobile){
+    apWrap.style.cssText = 'width:100%;';
+    apRow.style.cssText = 'display:flex;align-items:center;gap:10px;padding:0 1rem;width:100%;box-sizing:border-box;';
+    return;
+  }
+
+  // Match the wrapper width/position to the glass-card (rank table)
+  const card = document.querySelector('.glass-card.rank-card');
+  if(!card) return;
+  const cardRect = card.getBoundingClientRect();
+  const barRect  = document.querySelector('.bottom-bar').getBoundingClientRect();
+
+  apWrap.style.cssText =
+    `position:absolute;left:${cardRect.left - barRect.left}px;width:${cardRect.width}px;top:0;height:100%;display:flex;align-items:center;`;
+
+  // ap-row: same grid columns and padding as rank-row / judge-header-row
+  apRow.style.cssText =
+    `display:grid;grid-template-columns:${gridCols()};align-items:center;` +
+    `padding:0 1.4rem;width:100%;box-sizing:border-box;height:100%;`;
+}
+
+// ── ATHLETE PANEL ──
+function openAthletePanel(id){
+  activeAthleteId=id;
+  const a=athletes.find(x=>x.id===id);if(!a)return;
+  document.getElementById('apNameLabel').textContent=a.name;
+  document.getElementById('apScoreGrid').innerHTML=judges.map((j,i)=>`
+    <div class="score-field" id="sf_${i}">
+      <span class="score-field-label">${j}</span>
+      <input class="score-field-input" id="apf_${i}" type="number" inputmode="decimal"
+        value="${a.scores[i]!==null?a.scores[i]:''}" placeholder="—" min="0" max="10" step="0.1"
+        oninput="validateField(${i})"/>
+      <span class="score-field-err" id="sfe_${i}"></span>
+    </div>`).join('');
+  document.getElementById('rosterView').style.display='none';
+  document.getElementById('athletePanel').style.display='block';
+  document.getElementById('apSubmitBtn').disabled=false;
+  alignAthletePanel();
+  setTimeout(()=>document.querySelector('#apScoreGrid .score-field-input')?.focus(),50);
+}
+
+function validateField(i){
+  const el=document.getElementById('apf_'+i);
+  const sf=document.getElementById('sf_'+i);
+  const err=document.getElementById('sfe_'+i);
+  if(!el)return true;
+  const raw=el.value.trim();
+  if(raw===''){sf.classList.remove('err');err.textContent='';return true;}
+  const v=parseFloat(raw);
+  if(isNaN(v)||v<0||v>10){
+    sf.classList.add('err');err.textContent=v>10?'>10':'無效';
+    document.getElementById('apSubmitBtn').disabled=true;
+    return false;
+  }
+  sf.classList.remove('err');err.textContent='';
+  // re-check all to re-enable button
+  const allOk=judges.every((_,j)=>{
+    const e=document.getElementById('apf_'+j);if(!e)return true;
+    const r=e.value.trim();if(r==='')return true;
+    const vv=parseFloat(r);return !isNaN(vv)&&vv>=0&&vv<=10;
+  });
+  document.getElementById('apSubmitBtn').disabled=!allOk;
+  return true;
+}
+
+function validateAll(){
+  let ok=true;
+  judges.forEach((_,i)=>{
+    const el=document.getElementById('apf_'+i);
+    const sf=document.getElementById('sf_'+i);
+    const err=document.getElementById('sfe_'+i);
+    if(!el)return;
+    const raw=el.value.trim();
+    if(raw===''){
+      sf.classList.add('err');err.textContent='必填';ok=false;
+    } else {
+      const v=parseFloat(raw);
+      if(isNaN(v)||v<0||v>10){sf.classList.add('err');err.textContent=v>10?'>10':'無效';ok=false;}
+    }
+  });
+  return ok;
+}
+
+function closeAthletePanel(){
+  activeAthleteId=null;
+  document.getElementById('athletePanel').style.display='none';
+  document.getElementById('rosterView').style.display='flex';
+}
+
+function submitAthletePanel(){
+  if(!validateAll()) return;
+  const a=athletes.find(x=>x.id===activeAthleteId);if(!a)return;
+  judges.forEach((_,i)=>{
+    const el=document.getElementById('apf_'+i);if(!el)return;
+    const raw=el.value.trim();
+    a.scores[i]=raw===''?null:Math.min(10,Math.max(0,parseFloat(raw)));
+  });
+  renderRanking(true);
+  renderBar();
+  closeAthletePanel();
+}
+
+// ── THEME ──
+function setTheme(t){
+  currentTheme=t;
+  document.documentElement.setAttribute('data-theme',t);
+  const track=document.getElementById('themeToggleTrack');
+  if(track) track.classList.toggle('on',t==='light');
+}
+
+// ── BACKGROUND IMAGE ──
+function applyBgImage(){
+  const layer=document.getElementById('bgImageLayer');
+  const preview=document.getElementById('bgImgPreview');
+  const removeBtn=document.getElementById('bgImgRemoveBtn');
+  if(bgImage){
+    layer.style.backgroundImage=`url("${bgImage}")`;
+    layer.classList.add('active');
+    preview.style.backgroundImage=`url("${bgImage}")`;
+    preview.innerHTML='';
+    removeBtn.style.display='block';
+  } else {
+    layer.style.backgroundImage='none';
+    layer.classList.remove('active');
+    preview.style.backgroundImage='none';
+    preview.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
+    removeBtn.style.display='none';
+  }
+}
+function onBgImageUpload(e){
+  const file=e.target.files&&e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{bgImage=reader.result;applyBgImage();};
+  reader.readAsDataURL(file);
+}
+function removeBgImage(){
+  bgImage=null;
+  document.getElementById('bgImgInput').value='';
+  applyBgImage();
+}
+
+// ── SETTINGS ──
+function openSettings(){
+  tmpAthleteCount=athletes.length;
+  tmpJudgeCount=judges.length;
+  tmpShowJudgeHeader=showJudgeHeader;
+  tmpJudgeNames=[...judges];
+  rebuildAthleteList();
+  rebuildJudgeList();
+  document.getElementById('settingsAthleteCount').textContent=tmpAthleteCount;
+  document.getElementById('settingsJudgeCount').textContent=tmpJudgeCount;
+  syncJudgeToggleUI();
+  applyBgImage();
+  document.getElementById('settingsOverlay').classList.add('open');
+}
+function closeSettings(){document.getElementById('settingsOverlay').classList.remove('open')}
+function onSettingsOverlayClick(e){if(e.target===document.getElementById('settingsOverlay'))closeSettings()}
+
+function isMobileView(){return window.innerWidth<=640}
+
+function rebuildAthleteList(){
+  const mobile=isMobileView();
+  const collapsed=mobile&&tmpAthleteCount>3;
+  const grid=document.getElementById('settingsNameList');
+  grid.className='name-grid'+(collapsed?' collapsed':'');
+  grid.innerHTML=Array.from({length:tmpAthleteCount},(_,i)=>{
+    const a=athletes[i];
+    const val=a?a.name:'EPM '+(i+1);
+    const aid=a?a.id:'new_'+i;
+    return `<div class="name-row"><span class="name-idx">${i+1}</span>
+      <input class="name-input" id="sn_${aid}" data-idx="${i}" value="${val}" placeholder="選手 ${i+1}" maxlength="20"/></div>`;
+  }).join('');
+  const old=grid.nextElementSibling;
+  if(old&&old.classList.contains('list-expand-btn'))old.remove();
+  if(collapsed){
+    const btn=document.createElement('button');
+    btn.className='list-expand-btn';
+    btn.innerHTML='View More<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>';
+    btn.onclick=()=>{
+      grid.classList.toggle('collapsed');
+      btn.classList.toggle('open',!grid.classList.contains('collapsed'));
+    };
+    grid.after(btn);
+  }
+}
+
+function rebuildJudgeList(){
+  const mobile=isMobileView();
+  const collapsed=mobile&&tmpJudgeCount>3;
+  const grid=document.getElementById('settingsJudgeList');
+  grid.className='judge-name-grid'+(collapsed?' collapsed':'');
+  grid.innerHTML=Array.from({length:tmpJudgeCount},(_,i)=>{
+    const val=tmpJudgeNames[i]||(i<judges.length?judges[i]:'評審'+(i+1));
+    return `<div class="name-row"><span class="name-idx">${i+1}</span>
+      <input class="name-input" id="sjn_${i}" data-jidx="${i}" value="${val}" placeholder="評審 ${i+1}" maxlength="16"/></div>`;
+  }).join('');
+  const old=grid.nextElementSibling;
+  if(old&&old.classList.contains('list-expand-btn'))old.remove();
+  if(collapsed){
+    const btn=document.createElement('button');
+    btn.className='list-expand-btn';
+    btn.innerHTML='View More<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>';
+    btn.onclick=()=>{
+      grid.classList.toggle('collapsed');
+      btn.classList.toggle('open',!grid.classList.contains('collapsed'));
+    };
+    grid.after(btn);
+  }
+}
+
+function settingsAdjustAthletes(d){
+  tmpAthleteCount=Math.max(1,tmpAthleteCount+d);
+  document.getElementById('settingsAthleteCount').textContent=tmpAthleteCount;
+  rebuildAthleteList();
+}
+function settingsAdjustJudges(d){
+  tmpJudgeCount=Math.max(1,tmpJudgeCount+d);
+  document.getElementById('settingsJudgeCount').textContent=tmpJudgeCount;
+  document.querySelectorAll('[data-jidx]').forEach(el=>{tmpJudgeNames[+el.dataset.jidx]=el.value});
+  rebuildJudgeList();
+}
+
+function toggleJudgeHeader(){
+  tmpShowJudgeHeader=!tmpShowJudgeHeader;
+  syncJudgeToggleUI();
+}
+function syncJudgeToggleUI(){
+  const track=document.querySelector('#judgeHeaderToggle .toggle-track');
+  track.classList.toggle('on',tmpShowJudgeHeader);
+  document.getElementById('judgeToggleLabel').textContent=tmpShowJudgeHeader?'顯示':'隱藏';
+}
+
+function saveSettings(){
+  // Athlete count
+  while(athletes.length<tmpAthleteCount)
+    athletes.push({id:nextId++,name:'EPM '+(athletes.length+1),scores:Array(judges.length).fill(null)});
+  while(athletes.length>tmpAthleteCount){
+    const removed=athletes.pop();
+    if(activeAthleteId===removed.id) closeAthletePanel();
+  }
+  // Athlete names
+  athletes.forEach((a,i)=>{
+    const el=document.querySelector(`[data-idx="${i}"]`);
+    if(el){const v=el.value.trim();if(v)a.name=v;}
+  });
+  // Judge names from inputs
+  document.querySelectorAll('[data-jidx]').forEach(el=>{tmpJudgeNames[+el.dataset.jidx]=el.value.trim()||('評審'+(+el.dataset.jidx+1))});
+  // Judge count
+  while(judges.length<tmpJudgeCount){
+    judges.push(tmpJudgeNames[judges.length]||('評審'+(judges.length+1)));
+    athletes.forEach(a=>a.scores.push(null));
+  }
+  while(judges.length>tmpJudgeCount){
+    judges.pop(); athletes.forEach(a=>a.scores.pop());
+  }
+  // Update existing judge names
+  judges.forEach((_,i)=>{if(tmpJudgeNames[i])judges[i]=tmpJudgeNames[i]});
+  showJudgeHeader=tmpShowJudgeHeader;
+  renderJudgeHeader();
+  renderRanking(false);
+  renderBar();
+  closeSettings();
+}
+
+// ── EXPORT ──
+function exportHTML(){
+  // Bake current state into a clone of this document
+  const clone=document.documentElement.cloneNode(true);
+  // Update the inline state variables in the script tag
+  const scripts=clone.querySelectorAll('script');
+  scripts.forEach(s=>{
+    if(s.textContent.includes('let judges')){
+      s.textContent=s.textContent
+        .replace(/let judges\s*=\s*[^;]+;/,`let judges=${JSON.stringify(judges)};`)
+        .replace(/let athletes\s*=\s*[^;]+;/,`let athletes=${JSON.stringify(athletes)};`)
+        .replace(/let nextId\s*=\s*[^;]+;/,`let nextId=${nextId};`)
+        .replace(/let currentTheme\s*=\s*[^;]+;/,`let currentTheme=${JSON.stringify(currentTheme)};`)
+        .replace(/let showJudgeHeader\s*=\s*[^;]+;/,`let showJudgeHeader=${showJudgeHeader};`)
+        .replace(/let bgImage\s*=\s*[^;]+;/,`let bgImage=${JSON.stringify(bgImage)};`)
+        .replace(/setTheme\('dark'\)/,`setTheme(${JSON.stringify(currentTheme)})`);
+    }
+  });
+  // Update title
+  clone.querySelector('#siteTitle').textContent=document.getElementById('siteTitle').textContent;
+  const html='<!DOCTYPE html>\n'+clone.outerHTML;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));
+  a.download='rankings_export.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ── PODIUM ──
+function openPodium(){
+  launchConfetti();
+  document.getElementById('podiumTitle').textContent=
+    document.getElementById('siteTitle').textContent.trim()||'Overall Rankings';
+  const ranked=getRanked();
+  const groups={1:[],2:[],3:[]};
+  ranked.forEach(({athlete:a,rank:r,avg:av})=>{if(r<=3&&av!==null)groups[r].push(a.name)});
+  const icon={1:'🥇',2:'🥈',3:'🥉'};
+  const cls={1:'first',2:'second',3:'third'};
+  document.getElementById('podiumRow').innerHTML=[2,1,3].map(r=>`
+    <div class="podium-col ${cls[r]}${!groups[r].length?' empty':''}">
+      <div class="podium-names">${groups[r].length?groups[r].join('、'):'—'}</div>
+      <div class="podium-bar">${icon[r]}</div>
+    </div>`).join('');
+  document.getElementById('podiumOverlay').classList.add('open');
+}
+function closePodium(e){
+  if(e&&e.target!==e.currentTarget)return;
+  document.getElementById('podiumOverlay').classList.remove('open');
+}
+
+// ── CONFETTI ──
+function launchConfetti(){
+  const canvas=document.createElement('canvas');
+  canvas.style.cssText='position:fixed;inset:0;z-index:999;pointer-events:none;width:100%;height:100%';
+  document.body.appendChild(canvas);
+  const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+  const colors=['#ffd166','#14f1c4','#3a8bff','#ff9f5e','#d4e2ff','#a78bfa','#f472b6'];
+  const P=Array.from({length:160},()=>({
+    x:Math.random()*canvas.width,y:-20-Math.random()*120,
+    w:6+Math.random()*8,h:10+Math.random()*14,
+    color:colors[Math.floor(Math.random()*colors.length)],
+    rot:Math.random()*Math.PI*2,rotV:(Math.random()-.5)*.18,
+    vx:(Math.random()-.5)*4,vy:3+Math.random()*4,alpha:1
+  }));
+  let f=0;
+  (function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    P.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;p.rot+=p.rotV;
+      if(f>90)p.alpha=Math.max(0,p.alpha-.012);
+      ctx.save();ctx.globalAlpha=p.alpha;ctx.translate(p.x,p.y);ctx.rotate(p.rot);
+      ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();
+    });f++;
+    if(f<160)requestAnimationFrame(draw);else canvas.remove();
+  })();
+}
+
+// ── HEADER SCROLL BLUR ──
+(function(){
+  const hdr=document.querySelector('.site-header');
+  function check(scrollTop){hdr.classList.toggle('scrolled',scrollTop>10)}
+  // desktop: window scroll
+  window.addEventListener('scroll',()=>check(window.scrollY),{passive:true});
+  // mobile: rank-card inner scroll
+  const card=document.querySelector('.glass-card.rank-card');
+  if(card) card.addEventListener('scroll',()=>check(card.scrollTop),{passive:true});
+})();
+
+// ── INIT ──
+setTheme('dark');
+renderJudgeHeader();
+renderRanking(false);
+renderBar();
+applyBgImage();
+window.addEventListener('resize', alignAthletePanel, {passive:true});
+</script>
+</body>
+</html>

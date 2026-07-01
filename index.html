@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Systems Hub</title>
+<style>
+:root{
+  --sb-bg:#10151f;--sb-bg2:#161d2b;
+  --sb-line:rgba(255,255,255,.07);
+  --sb-icon:#7d8aa3;--sb-icon-hover:#e8edf7;
+  --sb-active:#3A5FE8;--sb-active-glow:rgba(58,95,232,.35);
+  --sb-tooltip-bg:#1c2433;--sb-tooltip-text:#eef1f8;
+  --sb-w:64px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI','PingFang TC',sans-serif}
+body{display:flex;background:#0c0f16}
+
+/* ── SIDEBAR ── */
+#sidebar{
+  width:var(--sb-w);flex-shrink:0;height:100vh;
+  background:linear-gradient(175deg,var(--sb-bg) 0%,var(--sb-bg2) 100%);
+  display:flex;flex-direction:column;align-items:center;
+  padding:16px 0;gap:6px;position:relative;z-index:10;
+  box-shadow:2px 0 24px rgba(0,0,0,.35);
+}
+#sidebar::after{content:'';position:absolute;right:0;top:0;bottom:0;width:1px;background:var(--sb-line)}
+
+.sb-brand{
+  width:34px;height:34px;border-radius:10px;margin-bottom:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#3A5FE8,#3AABF2);
+  box-shadow:0 4px 14px rgba(58,95,232,.4);
+}
+.sb-brand svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+
+.sb-divider{width:28px;height:1px;background:var(--sb-line);margin:4px 0 10px}
+
+.sb-nav{display:flex;flex-direction:column;gap:6px;width:100%;align-items:center}
+
+.sb-item{
+  position:relative;width:46px;height:46px;border-radius:13px;border:none;background:transparent;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--sb-icon);transition:background .16s,color .16s;flex-shrink:0;
+}
+.sb-item svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;transition:transform .16s}
+.sb-item:hover{background:rgba(255,255,255,.06);color:var(--sb-icon-hover)}
+.sb-item:hover svg{transform:translateY(-1px)}
+.sb-item.active{color:#fff;background:rgba(58,95,232,.18)}
+.sb-item.active::before{
+  content:'';position:absolute;left:-12px;top:50%;transform:translateY(-50%);
+  width:3px;height:22px;border-radius:0 3px 3px 0;background:var(--sb-active);
+  box-shadow:0 0 10px var(--sb-active-glow);
+}
+.sb-item.active{box-shadow:inset 0 0 0 1px rgba(58,95,232,.4)}
+
+/* tooltip */
+.sb-tooltip{
+  position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%) translateX(-4px);
+  background:var(--sb-tooltip-bg);color:var(--sb-tooltip-text);
+  font-size:11.5px;font-weight:600;letter-spacing:.02em;white-space:nowrap;
+  padding:6px 11px;border-radius:7px;pointer-events:none;opacity:0;
+  transition:opacity .14s,transform .14s;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:50;
+}
+.sb-tooltip::before{
+  content:'';position:absolute;right:100%;top:50%;transform:translateY(-50%);
+  border:5px solid transparent;border-right-color:var(--sb-tooltip-bg);
+}
+.sb-item:hover .sb-tooltip{opacity:1;transform:translateY(-50%) translateX(0)}
+
+.sb-footer{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:10px}
+.sb-status-dot{width:6px;height:6px;border-radius:50%;background:#3ddc84;box-shadow:0 0 0 3px rgba(61,220,132,.18)}
+
+/* ── MAIN AREA ── */
+#main{flex:1;height:100vh;position:relative;background:#0c0f16}
+.sys-frame{
+  position:absolute;inset:0;width:100%;height:100%;border:none;
+  opacity:0;visibility:hidden;transition:opacity .15s;background:#fff;
+}
+.sys-frame.active{opacity:1;visibility:visible;z-index:1}
+
+/* loading shimmer while iframe first loads */
+.sys-loading{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:#0c0f16;color:#5a6680;font-size:12px;font-weight:600;letter-spacing:.04em;
+  z-index:0;transition:opacity .2s;
+}
+.sys-loading.hidden{opacity:0;pointer-events:none}
+
+@media(max-width:640px){
+  :root{--sb-w:56px}
+  .sb-item{width:40px;height:40px}
+  .sb-item svg{width:19px;height:19px}
+  .sb-tooltip{display:none}
+}
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <div class="sb-brand" title="Systems Hub">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+  </div>
+  <div class="sb-divider"></div>
+
+  <div class="sb-nav" id="sb-nav">
+    <!-- Contest Ranking : Trophy -->
+    <button class="sb-item" data-target="contest" title="">
+      <svg viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3 4"/><path d="M17 6h3a3 3 0 0 1-3 4"/></svg>
+      <span class="sb-tooltip">Contest Ranking</span>
+    </button>
+
+    <!-- Talent Dashboard : Radar -->
+    <button class="sb-item" data-target="talent" title="">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/><path d="M12 3v3M21 12h-3M12 21v-3M3 12h3"/></svg>
+      <span class="sb-tooltip">Talent Dashboard</span>
+    </button>
+
+    <!-- Project Dashboard : Schedule -->
+    <button class="sb-item" data-target="project" title="">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2.2"/><path d="M3 9h18"/><path d="M8 2v4M16 2v4"/><circle cx="15.5" cy="15" r="3"/><path d="M15.5 13.6V15l1 .8"/></svg>
+      <span class="sb-tooltip">Project Dashboard</span>
+    </button>
+
+    <!-- PD Parts Tracking : Truck -->
+    <button class="sb-item" data-target="pdparts" title="">
+      <svg viewBox="0 0 24 24"><rect x="1" y="7" width="13" height="10" rx="1.3"/><path d="M14 10h3.5L21 13.5V17h-3.5"/><circle cx="5.5" cy="18.5" r="1.8"/><circle cx="16.5" cy="18.5" r="1.8"/></svg>
+      <span class="sb-tooltip">PD Parts Tracking</span>
+    </button>
+  </div>
+
+  <div class="sb-footer">
+    <span class="sb-status-dot" title="All systems active"></span>
+  </div>
+</nav>
+
+<main id="main">
+  <div class="sys-loading" id="loading-contest">CONTEST RANKING</div>
+  <iframe class="sys-frame" id="frame-contest" data-src="contestRanking.html" title="Contest Ranking"></iframe>
+
+  <div class="sys-loading hidden" id="loading-talent">TALENT DASHBOARD</div>
+  <iframe class="sys-frame" id="frame-talent" data-src="talentDashboard.html" title="Talent Dashboard"></iframe>
+
+  <div class="sys-loading hidden" id="loading-project">PROJECT DASHBOARD</div>
+  <iframe class="sys-frame" id="frame-project" data-src="projectDashboard.html" title="Project Dashboard"></iframe>
+
+  <div class="sys-loading hidden" id="loading-pdparts">PD PARTS TRACKING</div>
+  <iframe class="sys-frame" id="frame-pdparts" data-src="PD_Parts_Tracking_System.html" title="PD Parts Tracking"></iframe>
+</main>
+
+<script>
+const STORAGE_KEY='systems-hub-last-tab';
+const items=document.querySelectorAll('.sb-item');
+const frames={
+  contest: document.getElementById('frame-contest'),
+  talent: document.getElementById('frame-talent'),
+  project: document.getElementById('frame-project'),
+  pdparts: document.getElementById('frame-pdparts'),
+};
+const loadings={
+  contest: document.getElementById('loading-contest'),
+  talent: document.getElementById('loading-talent'),
+  project: document.getElementById('loading-project'),
+  pdparts: document.getElementById('loading-pdparts'),
+};
+const loadedOnce={contest:false,talent:false,project:false,pdparts:false};
+
+function loadFrame(key){
+  const f=frames[key];
+  if(!f.src){ f.src=f.dataset.src; }
+}
+function switchTo(key){
+  items.forEach(it=>it.classList.toggle('active', it.dataset.target===key));
+  Object.keys(frames).forEach(k=>{
+    frames[k].classList.toggle('active', k===key);
+  });
+  loadFrame(key);
+  try{ localStorage.setItem(STORAGE_KEY,key); }catch(e){}
+}
+Object.keys(frames).forEach(key=>{
+  frames[key].addEventListener('load',()=>{
+    loadedOnce[key]=true;
+    loadings[key].classList.add('hidden');
+  });
+});
+
+items.forEach(it=>{
+  it.addEventListener('click',()=>switchTo(it.dataset.target));
+});
+
+// restore last tab, default to PD Parts (first feature focus) -> default contest if none saved
+let initial='contest';
+try{
+  const saved=localStorage.getItem(STORAGE_KEY);
+  if(saved && frames[saved]) initial=saved;
+}catch(e){}
+switchTo(initial);
+</script>
+</body>
+</html>
